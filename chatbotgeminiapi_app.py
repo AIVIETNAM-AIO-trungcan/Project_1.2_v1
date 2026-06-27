@@ -5,7 +5,7 @@ import pypdf
 import chromadb
 import google.generativeai as genai
 
-# Cấu hình API Key của Google Gemini (Lấy từ hệ thống bảo mật của Streamlit Cloud)
+# Cấu hình API Key của Google Gemini
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 PROMPT = """Bạn là trợ lý hỏi đáp. Dùng các đoạn ngữ cảnh dưới đây để trả lời câu hỏi.
@@ -27,7 +27,7 @@ for k, v in {"collection": None, "pdf_name": "", "chat_history": []}.items():
 def embed(texts):
     """Chuyển danh sách chuỗi text thành danh sách vector bằng Gemini"""
     result = genai.embed_content(
-        model="models/embedding-001", content=texts, task_type="retrieval_document"
+        model="models/text-embedding-004", content=texts, task_type="retrieval_document"
     )
     return result["embedding"]
 
@@ -58,6 +58,14 @@ def process_pdf(uploaded_file):
     os.unlink(path)
 
     chunks = chunk_text(text)
+
+    #  Ngăn chặn lỗi văng app khi PDF là file scan/ảnh rỗng chữ
+    if not chunks:
+        st.error(
+            "❌ Không tìm thấy văn bản! Có thể đây là file scan/ảnh. Vui lòng upload PDF chứa chữ thuần."
+        )
+        st.stop()
+
     client = chromadb.Client()
     collection = client.get_or_create_collection(f"rag_{int(time.time())}")
 
@@ -73,7 +81,7 @@ def rag(question, collection, k=4):
     """Hàm RAG chính: Tìm context rồi hỏi LLM Gemini."""
     # 1. Nhúng câu hỏi của người dùng thành vector
     query_emb = genai.embed_content(
-        model="models/embedding-001", content=question, task_type="retrieval_query"
+        model="models/text-embedding-004", content=question, task_type="retrieval_query"
     )["embedding"]
 
     # 2. Tìm kiếm trong ChromaDB
