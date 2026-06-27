@@ -1,0 +1,9 @@
+# Bỏ qua database của ChromaDB
+rag_*/
+
+# Bỏ qua thư mục rác của Python
+__pycache__/
+*.pyc
+
+# Bỏ qua môi trường ảo (nếu có)
+rag_project/
