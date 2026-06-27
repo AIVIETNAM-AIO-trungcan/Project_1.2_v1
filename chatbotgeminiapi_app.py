@@ -27,7 +27,7 @@ for k, v in {"collection": None, "pdf_name": "", "chat_history": []}.items():
 def embed(texts):
     """Chuyển danh sách chuỗi text thành danh sách vector bằng Gemini"""
     result = genai.embed_content(
-        model="models/text-embedding-004", content=texts, task_type="retrieval_document"
+        model="models/embedding-001", content=texts, task_type="retrieval_document"
     )
     return result["embedding"]
 
@@ -73,7 +73,7 @@ def rag(question, collection, k=4):
     """Hàm RAG chính: Tìm context rồi hỏi LLM Gemini."""
     # 1. Nhúng câu hỏi của người dùng thành vector
     query_emb = genai.embed_content(
-        model="models/text-embedding-004", content=question, task_type="retrieval_query"
+        model="models/embedding-001", content=question, task_type="retrieval_query"
     )["embedding"]
 
     # 2. Tìm kiếm trong ChromaDB
