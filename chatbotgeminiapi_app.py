@@ -25,11 +25,27 @@ for k, v in {"collection": None, "pdf_name": "", "chat_history": []}.items():
 
 # Phần 3: Các phần xử lý (core functions)
 def embed(texts):
-    """Chuyển danh sách chuỗi text thành danh sách vector bằng Gemini"""
-    result = genai.embed_content(
-        model="models/text-embedding-004", content=texts, task_type="retrieval_document"
-    )
-    return result["embedding"]
+    """Chuyển danh sách chuỗi text thành danh sách vector (Xử lý đơn lẻ để tránh lỗi Batch trên Cloud)"""
+    embeddings = []
+
+    # Tạo một thanh tiến trình nhỏ trên giao diện để người dùng không bị sốt ruột
+    progress_bar = st.progress(0, text="Đang nhúng dữ liệu lên Google...")
+    total = len(texts)
+
+    for i, t in enumerate(texts):
+        result = genai.embed_content(
+            model="models/text-embedding-004", content=t, task_type="retrieval_document"
+        )
+        embeddings.append(result["embedding"])
+
+        # Cập nhật thanh tiến trình
+        progress_bar.progress((i + 1) / total, text=f"Đang nhúng đoạn {i+1}/{total}...")
+
+        # Nghỉ 0.2 giây giữa các lần gọi để tránh bị Google chặn vì gửi request quá nhanh (Rate Limit)
+        time.sleep(0.2)
+
+    progress_bar.empty()  # Xóa thanh tiến trình khi hoàn thành
+    return embeddings
 
 
 def chunk_text(text, size=1000, overlap=200):
